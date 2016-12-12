@@ -16,7 +16,11 @@ dispatcher = updater.dispatcher
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
+# Handlers #
+
 def unknown(bot, update):
+    checkNewDay(update.message.date)
+
     global commands
     message = "Sorry, I didn't understand that command. Available commands are:\n"
     for command in commands:
@@ -24,30 +28,25 @@ def unknown(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id, text=message)
 
 def repo(bot, update):
+    checkNewDay(update.message.date)
+
     bot.sendMessage(chat_id=update.message.chat_id, text="My source code is located at https://github.com/SidneyBovet/WakeUpBot")
 
 def test(bot, update):
+    checkNewDay(update.message.date)
+
     chat_id = update.message.chat_id
     message_id = update.message.message_id
     from_user = update.message.from_user
     date = update.message.date
     bot.sendMessage(chat_id=chat_id, text="chat_id="+str(chat_id)+" message_id="+str(message_id)+" from_user="+str(from_user)+" date="+str(date))
 
-def checkNewDay(date):
-    global arrivals, arrivalsYesterday
-
-    if date.date() > lastDate.date():
-        bestPlayerID = findBestPlayerID()
-        scores[bestPlayerID] =+ 1
-        arrivalsYesterday = arrivals.deepcopy()
-        arrivals = None;
-
 def arrived(bot, update):
+    checkNewDay(update.message.date)
+
     global competitors, arrivals, arrivalsYesterday, lastDate
     user_id = update.message.from_user['id']
     date = update.message.date
-
-    checkNewDay(date)
 
     if not user_id in competitors:
         registerNewUser(bot, update)
@@ -63,24 +62,24 @@ def arrived(bot, update):
         bot.sendMessage(chat_id=update.message.chat_id, text="You already participated today.")
 
 def registerNewUser(bot, update):
+    checkNewDay(update.message.date)
+
     user_id = update.message.from_user['id']
-    competitors[user_id] = update.message.from_user['first_name']
-    scores[user_id] = 0
-    bot.sendMessage(chat_id=update.message.chat_id, text="Welcome in the competition, " + str(update.message.from_user['first_name']))
+    if not user_id in competitors:
+        competitors[user_id] = update.message.from_user['first_name']
+        scores[user_id] = 0
+        bot.sendMessage(chat_id=update.message.chat_id, text="Welcome in the competition, " + str(update.message.from_user['first_name']))
+    else:
+        bot.sendMessage(chat_id=update.message.chat_id, text="You are already in, " + str(update.message.from_user['first_name']))
 
 def bestPlayer(bot, update):
-    date = update.message.date
-    checkNewDay(date)
+    checkNewDay(update.message.date)
 
     if arrivals == None or not arrivals: # if None or empty
         bot.sendMessage(chat_id=update.message.chat_id, text="No one yet arrived at work today.")
     else:
         bestKey = findBestPlayerID()
         bot.sendMessage(chat_id=update.message.chat_id, text="Today's best is " + str(competitors[bestKey]))
-
-def findBestPlayerID():
-    global arrivals
-    return reduce(lambda bestKey,key: key if arrivals[key] < arrivals[bestKey] else bestKey, arrivals)
 
 def displayScores(bot, update):
     global scores, competitors
@@ -89,11 +88,33 @@ def displayScores(bot, update):
         message += "- " + competitors[playerID] + ": " + str(scores[playerID])
     bot.sendMessage(chat_id=update.message.chat_id, text=message)
 
-# Add all commands to the dispatcher
+# Helpers #
+
+def findBestPlayerID():
+    global arrivals
+    return reduce(lambda bestKey,key: key if arrivals[key] < arrivals[bestKey] else bestKey, arrivals)
+
+def checkNewDay(date):
+    global arrivals, arrivalsYesterday
+    if date.date() > lastDate.date():
+        arrivalsYesterday = arrivals.deepcopy()
+        points = 4
+        while scores:
+            bestPlayerID = findBestPlayerID()
+            scores[bestPlayerID] += points
+            points -= 1
+            if points < 0:
+                break
+        arrivals = None;
+
+# Handlers creeation
+
 commands = {'start':registerNewUser, 'test':test, 'git':repo, 'arrived':arrived, 'best':bestPlayer, 'scoreboard':displayScores}
 for command in commands:
     dispatcher.add_handler(CommandHandler(command, commands[command]))
 unknown_handler = MessageHandler(Filters.command, unknown)
 dispatcher.add_handler(unknown_handler)
+
+# Start the bot #
 
 updater.start_polling()
