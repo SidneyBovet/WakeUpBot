@@ -17,7 +17,15 @@ def start(bot, update):
 def repo(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id, text="My source code is located at https://github.com/SidneyBovet/WakeUpBot")
 
+def register(bot, update):
+    chat_id = update.message.chat_id
+    message_id = update.message.message_id
+    from_user = update.message.from_user
+    bot.sendMessage(chat_id=chat_id, text="chat_id="+chat_id+" message_id="+message_id+" from_user="+from_user)
+
+
 start_handler = CommandHandler('start', start)
+start_handler = CommandHandler('register', register)
 start_handler = CommandHandler('git', repo)
 dispatcher.add_handler(start_handler)
 
