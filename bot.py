@@ -86,7 +86,7 @@ def displayScores(bot, update):
     global scores, competitors
     message = "Scores: (last updated yesterday)\n"
     for playerID in competitors:
-        message += "- " + competitors[playerID] + ": " + str(scores[playerID] + "\n")
+        message += "- " + competitors[playerID] + ": " + str(scores[playerID])  + "\n"
     bot.sendMessage(chat_id=update.message.chat_id, text=message)
 
 # Helpers #
