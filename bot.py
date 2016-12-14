@@ -99,7 +99,7 @@ def checkNewDay(date):
     if date.date() > lastDate.date():
         arrivalsYesterday = arrivals.deepcopy()
         points = 4
-        while scores and points >= 0:
+        while scores and points > 0:
             bestPlayerID = findBestPlayerID()
             scores[bestPlayerID] += points
             del scores[bestPlayerID]
