@@ -9,7 +9,7 @@ arrivals = {}
 arrivalsYesterday = {}
 lastDate = datetime.now()
 
-with open('settings.json') as settings_file:    
+with open('settings.json') as settings_file:
     settings = json.load(settings_file)
 
 updater = Updater(token=settings['token'])
@@ -69,7 +69,7 @@ def registerNewUser(bot, update):
     if not user_id in competitors:
         competitors[user_id] = update.message.from_user['first_name']
         scores[user_id] = 0
-        bot.sendMessage(chat_id=update.message.chat_id, text="Welcome in the competition, " + str(update.message.from_user['first_name']))
+        bot.sendMessage(chat_id=update.message.chat_id, text="Welcome to the competition, " + str(update.message.from_user['first_name']))
     else:
         bot.sendMessage(chat_id=update.message.chat_id, text="You are already in, " + str(update.message.from_user['first_name']))
 
@@ -86,7 +86,7 @@ def displayScores(bot, update):
     global scores, competitors
     message = "Scores: (last updated yesterday)\n"
     for playerID in competitors:
-        message += "- " + competitors[playerID] + ": " + str(scores[playerID])
+        message += "- " + competitors[playerID] + ": " + str(scores[playerID] + "\n")
     bot.sendMessage(chat_id=update.message.chat_id, text=message)
 
 # Helpers #
