@@ -10,7 +10,14 @@ First install the wrapper:
 pip install python-telegram-bot --upgrade
 ```
 
-And then simply run
+Then create a `settings.json` file at the same level as the `bot.py` file, with the API token stored as follows:
+```json
+{
+    "token": "YourApiTokenComesHere"
+}
+```
+
+And then simply run:
 ```bash
 python3 bot.py
 ```
