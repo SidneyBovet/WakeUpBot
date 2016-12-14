@@ -1,7 +1,7 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from datetime import datetime
 from functools import reduce
-import logging
+import logging, json
 
 competitors = {}
 scores = {}
@@ -9,9 +9,10 @@ arrivals = {}
 arrivalsYesterday = {}
 lastDate = datetime.now()
 
-# Telegram bot token: 301838740:AAEBm36YW8ebArED6GScm4Hj1SRwtqwzDDM
+with open('settings.json') as settings_file:    
+    settings = json.load(settings_file)
 
-updater = Updater(token='301838740:AAEBm36YW8ebArED6GScm4Hj1SRwtqwzDDM')
+updater = Updater(token=settings['token'])
 dispatcher = updater.dispatcher
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
