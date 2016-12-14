@@ -83,8 +83,7 @@ def displayScores(bot, update):
 
 # Helpers #
 
-def findBestPlayerID():
-    global arrivals
+def findBestPlayerID(arrivals):
     return reduce(lambda bestKey,key: key if arrivals[key] < arrivals[bestKey] else bestKey, arrivals)
 
 def checkNewDay(date):
@@ -93,7 +92,7 @@ def checkNewDay(date):
         arrivalsYesterday = arrivals.deepcopy()
         points = 4
         while arrivals and points > 0:
-            bestPlayerID = findBestPlayerID()
+            bestPlayerID = findBestPlayerID(arrivals)
             scores[bestPlayerID] += points
             del arrivals[bestPlayerID]
             points -= 1
