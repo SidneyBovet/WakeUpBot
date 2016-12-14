@@ -9,14 +9,6 @@ arrivals = {}
 arrivalsYesterday = {}
 lastDate = datetime.now()
 
-with open('settings.json') as settings_file:
-    settings = json.load(settings_file)
-
-updater = Updater(token=settings['token'])
-dispatcher = updater.dispatcher
-
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
 # Handlers #
 
 def unknown(bot, update):
@@ -107,14 +99,23 @@ def checkNewDay(date):
             points -= 1
         arrivals = {};
 
-# Handlers creeation
+if __name__ == '__main__':
+    with open('settings.json') as settings_file:
+        settings = json.load(settings_file)
 
-commands = {'start':registerNewUser, 'test':test, 'git':repo, 'arrived':arrived, 'best':bestPlayer, 'scoreboard':displayScores}
-for command in commands:
-    dispatcher.add_handler(CommandHandler(command, commands[command]))
-unknown_handler = MessageHandler(Filters.command, unknown)
-dispatcher.add_handler(unknown_handler)
+    updater = Updater(token=settings['token'])
+    dispatcher = updater.dispatcher
 
-# Start the bot #
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-updater.start_polling()
+    # Handlers creation
+
+    commands = {'start':registerNewUser, 'test':test, 'git':repo, 'arrived':arrived, 'best':bestPlayer, 'scoreboard':displayScores}
+    for command in commands:
+        dispatcher.add_handler(CommandHandler(command, commands[command]))
+    unknown_handler = MessageHandler(Filters.command, unknown)
+    dispatcher.add_handler(unknown_handler)
+
+    # Start the bot #
+
+    updater.start_polling()
