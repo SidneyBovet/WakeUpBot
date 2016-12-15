@@ -2,7 +2,7 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from datetime import datetime
 from functools import reduce
 from storage import Storage
-import logging, json
+import logging, json, copy
 
 # Handlers #
 
@@ -85,7 +85,7 @@ def findBestPlayerID(arrivals):
 def checkNewDay(date):
     global storage
     if date.date() > storage.lastDate.date():
-        storage.arrivalsYesterday = storage.arrivals.deepcopy()
+        storage.arrivalsYesterday = copy.deepcopy(storage.arrivals)
         points = 4
         while storage.arrivals and points > 0:
             bestPlayerID = findBestPlayerID(storage.arrivals)
