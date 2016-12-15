@@ -1,13 +1,8 @@
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 from datetime import datetime
 from functools import reduce
+from storage import Storage
 import logging, json
-
-competitors = {}
-scores = {}
-arrivals = {}
-arrivalsYesterday = {}
-lastDate = datetime.now()
 
 # Handlers #
 
@@ -36,31 +31,32 @@ def test(bot, update):
 
 def arrived(bot, update):
     checkNewDay(update.message.date)
-
-    global competitors, arrivals, arrivalsYesterday, lastDate
+    global storage
     user_id = update.message.from_user['id']
     date = update.message.date
 
-    if not user_id in competitors:
+    if not user_id in storage.competitors:
         registerNewUser(bot, update)
 
-    if user_id in arrivalsYesterday:
-        if arrivalsYesterday[user_id] < date:
+    if user_id in storage.arrivalsYesterday:
+        if storage.arrivalsYesterday[user_id].time() > date.time():
             bot.sendMessage(chat_id=update.message.chat_id, text="You did better than yesterday, gg!")
 
-    if not user_id in arrivals:
-        lastDate = date
-        arrivals[user_id] = date
+    if not user_id in storage.arrivals:
+        storage.lastDate = date
+        storage.arrivals[user_id] = date
     else:
         bot.sendMessage(chat_id=update.message.chat_id, text="You already participated today.")
+
+    storage.storeData()
 
 def registerNewUser(bot, update):
     checkNewDay(update.message.date)
 
     user_id = update.message.from_user['id']
-    if not user_id in competitors:
-        competitors[user_id] = update.message.from_user['first_name']
-        scores[user_id] = 0
+    if not user_id in storage.competitors:
+        storage.competitors[user_id] = update.message.from_user['first_name']
+        storage.scores[user_id] = 0
         bot.sendMessage(chat_id=update.message.chat_id, text="Welcome to the competition, " + str(update.message.from_user['first_name']))
     else:
         bot.sendMessage(chat_id=update.message.chat_id, text="You are already in, " + str(update.message.from_user['first_name']))
@@ -68,17 +64,17 @@ def registerNewUser(bot, update):
 def bestPlayer(bot, update):
     checkNewDay(update.message.date)
 
-    if arrivals == None or not arrivals: # if None or empty
+    if storage.arrivals == None or not storage.arrivals: # if None or empty
         bot.sendMessage(chat_id=update.message.chat_id, text="No one yet arrived at work today.")
     else:
-        bestKey = findBestPlayerID()
-        bot.sendMessage(chat_id=update.message.chat_id, text="Today's best is " + str(competitors[bestKey]))
+        bestKey = findBestPlayerID(storage.arrivals)
+        bot.sendMessage(chat_id=update.message.chat_id, text="Today's best is " + str(storage.competitors[bestKey]))
 
 def displayScores(bot, update):
-    global scores, competitors
+    global storage
     message = "Scores: (last updated yesterday)\n"
-    for playerID in competitors:
-        message += "- " + competitors[playerID] + ": " + str(scores[playerID])  + "\n"
+    for playerID in storage.competitors:
+        message += "- " + storage.competitors[playerID] + ": " + str(storage.scores[playerID])  + "\n"
     bot.sendMessage(chat_id=update.message.chat_id, text=message)
 
 # Helpers #
@@ -87,18 +83,20 @@ def findBestPlayerID(arrivals):
     return reduce(lambda bestKey,key: key if arrivals[key] < arrivals[bestKey] else bestKey, arrivals)
 
 def checkNewDay(date):
-    global arrivals, arrivalsYesterday
-    if date.date() > lastDate.date():
-        arrivalsYesterday = arrivals.deepcopy()
+    global storage
+    if date.date() > storage.lastDate.date():
+        storage.arrivalsYesterday = storage.arrivals.deepcopy()
         points = 4
-        while arrivals and points > 0:
-            bestPlayerID = findBestPlayerID(arrivals)
-            scores[bestPlayerID] += points
-            del arrivals[bestPlayerID]
+        while storage.arrivals and points > 0:
+            bestPlayerID = findBestPlayerID(storage.arrivals)
+            storage.scores[bestPlayerID] += points
+            del storage.arrivals[bestPlayerID]
             points -= 1
-        arrivals = {};
+        storage.arrivals = {};
 
 if __name__ == '__main__':
+    storage = Storage()
+
     with open('settings.json') as settings_file:
         settings = json.load(settings_file)
 
@@ -118,3 +116,4 @@ if __name__ == '__main__':
     # Start the bot #
 
     updater.start_polling()
+    updater.idle()
